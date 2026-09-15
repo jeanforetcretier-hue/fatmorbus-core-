@@ -2,6 +2,10 @@
 
 Central workspace, welcome hub, compendium organizer, and signed release-verification layer for Foundry VTT modules **By Fatmorbus**.
 
+## Compatibility
+- Foundry VTT **v13** (minimum)
+- Foundry VTT **v14** (verified)
+
 ## Features
 - Supported-system panel using the official D&D 5e and Shadowdark logos, linked to their Foundry VTT package pages.
 - Redesigned 2048 × 1060 Fatmorbus presentation hub with Supported Systems, Recognized Modules, and Social Media areas.

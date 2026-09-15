@@ -5,3 +5,7 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Built by the release workflow
+dist/
+release-notes.md

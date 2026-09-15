@@ -1,0 +1,91 @@
+# Publishes a Fatmorbus Core release: validates module.json, builds the
+# installable ZIP with module.json at its root, and attaches it to the
+# GitHub release whose tag Foundry's download URL points at.
+#
+# Push a tag (v1.5.4, v1.6.0, …) or run the workflow by hand.
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the tagged tree
+        uses: actions/checkout@v4
+
+      - name: Validate module.json and prepare release metadata
+        id: prepare
+        env:
+          RELEASE_TAG: ${{ github.ref_type == 'tag' && github.ref_name || '' }}
+        run: node .github/scripts/prepare-release.mjs
+
+      - name: Build the installable ZIP
+        env:
+          ZIP_NAME: ${{ steps.prepare.outputs.zip_name }}
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          zip -r -q "dist/${ZIP_NAME}" . \
+            -x ".git/*" \
+               ".github/*" \
+               ".gitignore" \
+               ".gitattributes" \
+               "dist/*" \
+               "release-notes.md" \
+               "*.zip" \
+               "*.pem" \
+               "*.key" \
+               "*.p12" \
+               "*.pfx" \
+               "*private*"
+          echo "--- ZIP contents ---"
+          unzip -l "dist/${ZIP_NAME}"
+
+      - name: Check the ZIP layout Foundry expects
+        env:
+          ZIP_NAME: ${{ steps.prepare.outputs.zip_name }}
+        run: |
+          set -euo pipefail
+          entries="$(unzip -Z1 "dist/${ZIP_NAME}")"
+          if ! printf '%s\n' "$entries" | grep -qx "module.json"; then
+            echo "::error::module.json is not at the root of the ZIP. Foundry would refuse to install it."
+            exit 1
+          fi
+          if printf '%s\n' "$entries" | grep -qiE '\.(pem|key|p12|pfx)$|private'; then
+            echo "::error::The ZIP contains something that looks like signing key material."
+            exit 1
+          fi
+          if printf '%s\n' "$entries" | grep -q '\'; then
+            echo "::error::The ZIP has backslashes in its entry names. Foundry cannot read that layout."
+            exit 1
+          fi
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.prepare.outputs.tag }}
+          TITLE: ${{ steps.prepare.outputs.title }}
+          ZIP_NAME: ${{ steps.prepare.outputs.zip_name }}
+          NOTES: ${{ steps.prepare.outputs.notes_path }}
+        run: |
+          set -euo pipefail
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists — refreshing its assets."
+            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES"
+            gh release upload "$TAG" "dist/${ZIP_NAME}" module.json --clobber
+          else
+            gh release create "$TAG" \
+              --target "$GITHUB_SHA" \
+              --title "$TITLE" \
+              --notes-file "$NOTES" \
+              "dist/${ZIP_NAME}" module.json
+          fi

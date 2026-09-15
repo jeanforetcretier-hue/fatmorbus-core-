@@ -115,3 +115,30 @@ Un módulo firmado incluye `fatmorbus-integrity.json` en su raíz. Estados:
 
 Un módulo sin firmar **no se marca nunca como alterado**. Si subes la versión de
 un módulo firmado, debes volver a firmarlo o quedará en `modified`.
+
+## 7. Declarar el Core como dependencia obligatoria
+
+Un módulo By Fatmorbus que **necesite** el Core lo declara en su propio
+`module.json`. Con la URL del manifiesto, Foundry ofrece descargarlo e
+instalarlo solo si falta:
+
+```json
+"relationships": {
+  "requires": [
+    {
+      "id": "fatmorbus-core-by-fatmorbus",
+      "type": "module",
+      "manifest": "https://raw.githubusercontent.com/jeanforetcretier-hue/fatmorbus-core-/main/module.json",
+      "compatibility": { "minimum": "1.5.3" }
+    }
+  ]
+}
+```
+
+`compatibility.minimum` de la relación es la versión mínima **del Core**, no de
+Foundry. Súbela sólo cuando el módulo use algo que no existiera antes.
+
+Recuerda que el canal recomendado del apartado 1 (`fatmorbusRegisterModule`)
+**no** requiere el Core instalado: úsalo si prefieres que tu módulo funcione
+solo y gane las herramientas del Core cuando esté presente. La dependencia
+obligatoria es para módulos que sin el Core no tienen nada que hacer.
