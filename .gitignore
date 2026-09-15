@@ -1,0 +1,7 @@
+# Release archives built for GitHub releases
+*.zip
+
+# OS / editor noise
+Thumbs.db
+desktop.ini
+.DS_Store

@@ -1,0 +1,7 @@
+# Keep every distributed file byte-identical to the signed release archive:
+# the integrity manifest hashes these files with SHA-256, so no EOL conversion.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.zip binary

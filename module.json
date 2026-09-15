@@ -1,0 +1,25 @@
+{
+  "id": "fatmorbus-core-by-fatmorbus",
+  "title": "Fatmorbus Core — By Fatmorbus",
+  "description": "Central Fatmorbus workspace for Foundry VTT with refined 2048x1060 presentation layout, official D&D 5e and Shadowdark system logos with source links, improved center and recognized-module alignment inside the frame, polished social footer, one unified FATMORBUS compendium folder, always-on-top tools, and signed integrity verification.",
+  "version": "1.5.3",
+  "authors": [
+    {
+      "name": "Fatmorbus"
+    }
+  ],
+  "compatibility": {
+    "minimum": "13",
+    "verified": "14",
+    "maximum": "14"
+  },
+  "esmodules": [
+    "scripts/fatmorbus-core.mjs"
+  ],
+  "styles": [
+    "styles/fatmorbus-core.css"
+  ],
+  "url": "https://github.com/jeanforetcretier-hue/fatmorbus-core-",
+  "manifest": "https://raw.githubusercontent.com/jeanforetcretier-hue/fatmorbus-core-/main/module.json",
+  "download": "https://github.com/jeanforetcretier-hue/fatmorbus-core-/releases/download/v1.5.3/fatmorbus-core-by-fatmorbus-v1.5.3.zip"
+}

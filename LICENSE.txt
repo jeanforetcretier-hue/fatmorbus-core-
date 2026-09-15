@@ -1,0 +1,12 @@
+FATMORBUS PROPRIETARY LICENSE
+Copyright (c) 2026 Fatmorbus. All rights reserved.
+
+This software is provided for installation and use with Foundry Virtual Tabletop.
+Unless separately authorized in writing by Fatmorbus, you may not redistribute,
+resell, republish, repackage, sublicense, or distribute modified builds of this software.
+
+You may make local backup copies for your own use. Modification of installed files may
+cause the Fatmorbus digital integrity verification to report the installation as modified.
+
+Foundry Virtual Tabletop and related trademarks are property of their respective owners.
+This license does not claim ownership of Foundry Virtual Tabletop or third-party content.
