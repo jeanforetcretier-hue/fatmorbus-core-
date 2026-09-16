@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out the tagged tree
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Validate module.json and prepare release metadata
         id: prepare
@@ -79,13 +79,48 @@ jobs:
         run: |
           set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
-            echo "Release $TAG already exists — refreshing its assets."
-            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES"
+            echo "::notice::Release $TAG already exists. Refreshing its title, notes and assets, and publishing it if it was a draft."
+            # --draft=false matters: a draft release is invisible to anyone who is
+            # not signed in, so its download URL answers 404 even with the asset
+            # attached and this job green.
+            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES" --draft=false --prerelease=false
             gh release upload "$TAG" "dist/${ZIP_NAME}" module.json --clobber
           else
+            echo "::notice::Creating release $TAG."
             gh release create "$TAG" \
               --target "$GITHUB_SHA" \
               --title "$TITLE" \
               --notes-file "$NOTES" \
               "dist/${ZIP_NAME}" module.json
+          fi
+
+      - name: Verify the release is public and installable
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.prepare.outputs.tag }}
+          ZIP_NAME: ${{ steps.prepare.outputs.zip_name }}
+        run: |
+          set -euo pipefail
+          state="$(gh release view "$TAG" --json isDraft,isPrerelease,url,assets)"
+          draft="$(echo "$state" | jq -r '.isDraft')"
+          assets="$(echo "$state" | jq -r '[.assets[].name] | join(", ")')"
+          echo "::notice::Release $TAG — draft=$draft, assets=[$assets]"
+
+          if [ "$draft" != "false" ]; then
+            echo "::error::Release $TAG is still a draft, so Foundry cannot download it. Publish it from the release page."
+            exit 1
+          fi
+          if ! echo "$state" | jq -e --arg name "$ZIP_NAME" '.assets[] | select(.name == $name)' >/dev/null; then
+            echo "::error::Release $TAG has no asset named $ZIP_NAME."
+            exit 1
+          fi
+
+          # The check that actually matters: the URL Foundry reads from module.json,
+          # requested the way an anonymous Foundry client requests it.
+          url="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${ZIP_NAME}"
+          code="$(curl -sSL -o /dev/null -w '%{http_code}' "$url")"
+          echo "::notice::Anonymous download of $url answered HTTP $code"
+          if [ "$code" != "200" ]; then
+            echo "::error::The download URL in module.json answers HTTP $code. Foundry would fail with ENOENT after downloading nothing."
+            exit 1
           fi
